@@ -5,7 +5,7 @@ import static com.google.appengine.api.datastore.FetchOptions.Builder.*
 class DatastoreServiceSpec extends GaelykUnitSpec {
 
     def setup() {
-        groovlet 'dataStoreGroovlet.groovy'
+        groovlet 'createStock.groovy'
     }
 
     def "the datastore is used from within the groovlet"() {

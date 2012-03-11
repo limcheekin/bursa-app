@@ -1,6 +1,8 @@
 import com.sun.syndication.feed.synd.*
 import com.sun.syndication.io.SyndFeedOutput
-import groovyx.gaelyk.datastore.Key
+import com.google.appengine.api.datastore.*
+import static com.google.appengine.api.datastore.FetchOptions.Builder.*
+import com.google.appengine.api.datastore.EntityNotFoundException
 
 // ref: http://blogs.bytecode.com.au/glen/2006/12/22/generating-rss-feeds-with-grails-and-rome.html
 
@@ -17,18 +19,22 @@ if (supportedFormats.contains(format)) {
 }
 
 def getFeed(feedType) {
-    def announcements = [
-            new Announcement(
-                    link: '/EDMS\\edmsweb.nsf/LsvAllByID/1C46E3F09C11FDF5482579BC003BB938?OpenDocument',
-                    date: Date.parse('dd/MM/yyyy', '09/03/2012'),
-                    title: 'TRANSACTIONS (CHAPTER 10 OF LISTING REQUIREMENTS): NON RELATED PARTY TRANSACTIONS',
-                    description: 'PROPOSED STRATEGIC ALLIANCE WITH OPTIMA SYNERGY RESOURCES LIMITED (“OSRL”) THROUGH OSRL’S SUBSCRIPTION OF UP TO 479,833,766 EQUIVALENT TO 23% EQUITY INTEREST IN BEMBAN CORPORATION LIMITED (“BCL”) WITH INJECTION OF CASH AND/OR RELEVANT ASSETS INTO BCL'
-            )
-    ]
 
+    Announcement announcement
+
+    def query = new Query("Announcement")
+
+    query.addSort("date", Query.SortDirection.DESCENDING)
+
+    query.addFilter("stockName", Query.FilterOperator.EQUAL, params.stockName)
+
+    PreparedQuery preparedQuery = datastore.prepare(query)
+
+    def entities = preparedQuery.asList( withLimit(1000) )
 
     def entries = []
-    announcements.each { announcement ->
+    entities.each { entity ->
+        announcement = entity as Announcement
         def desc = new SyndContentImpl(type: "text/plain", value: announcement.description)
         def entry = new SyndEntryImpl(title: announcement.title,
                 link: announcement.link,

@@ -19,38 +19,44 @@ if (supportedFormats.contains(format)) {
 }
 
 def getFeed(feedType) {
+    try {
+        Entity stockEntity = datastore.get('Stock', params.stockName)
+        Stock stock = stockEntity as Stock
 
-    Announcement announcement
+        Announcement announcement
 
-    def query = new Query("Announcement")
+        def query = new Query("Announcement")
 
-    query.addSort("date", Query.SortDirection.DESCENDING)
+        query.addSort("date", Query.SortDirection.DESCENDING)
 
-    query.addFilter("stockName", Query.FilterOperator.EQUAL, params.stockName)
+        query.addFilter("stockName", Query.FilterOperator.EQUAL, params.stockName)
 
-    PreparedQuery preparedQuery = datastore.prepare(query)
+        PreparedQuery preparedQuery = datastore.prepare(query)
 
-    def entities = preparedQuery.asList( withLimit(1000) )
+        def entities = preparedQuery.asList( withLimit(Constants.ANNOUNCEMENTS_LIMIT) )
 
-    def entries = []
-    entities.each { entity ->
-        announcement = entity as Announcement
-        def desc = new SyndContentImpl(type: "text/plain", value: announcement.description)
-        def entry = new SyndEntryImpl(title: announcement.title,
-                link: announcement.link,
-                publishedDate: announcement.date, description: desc)
-        entries.add(entry)
+        def entries = []
+        entities.each { entity ->
+            announcement = entity as Announcement
+            def desc = new SyndContentImpl(type: "text/plain", value: announcement.description)
+            def entry = new SyndEntryImpl(title: announcement.title,
+                    link: Constants.BURSA_ANNOUNCEMENTS_URL + announcement.link,
+                    publishedDate: announcement.date, description: desc)
+            entries.add(entry)
 
+        }
+        SyndFeed feed = new SyndFeedImpl(feedType: feedType, title: stock.name,
+                link: Constants.URL_PREFIX + stock.name.replaceAll(' ', '+'), description: 'Announcements published in the last few days',
+                entries: entries)
+
+        StringWriter writer = new StringWriter()
+        SyndFeedOutput output = new SyndFeedOutput()
+        output.output(feed,writer)
+        writer.close()
+
+        return writer.toString()
+    } catch (EntityNotFoundException e) {
+        log.warning e.message
+        response.sendError(response.SC_FORBIDDEN)
     }
-    SyndFeed feed = new SyndFeedImpl(feedType: feedType, title: 'MALAYSIA SMELTING CORPORATION BERHAD',
-            link: 'http://announcements.bursamalaysia.com/EDMS%5CEdmsWeb.nsf/dfDisplayForm?Openform&Count=-1&form=dfDisplayForm&viewname=LsvAnnsAll&category=MALAYSIA+SMELTING+CORPORATION+BERHAD+', description: 'Announcements published in the last few days',
-            entries: entries)
-
-    StringWriter writer = new StringWriter()
-    SyndFeedOutput output = new SyndFeedOutput()
-    output.output(feed,writer)
-    writer.close()
-
-    return writer.toString()
-
 }

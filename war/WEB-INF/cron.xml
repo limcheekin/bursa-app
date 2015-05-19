@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<cronentries>
-    <cron>
-        <url>/getAnnouncements</url>
-        <description>Extract announcement data from bursa and store it to data store</description>
-        <schedule>every day 20:00</schedule>
-        <timezone>Asia/Kuala_Lumpur</timezone>
-    </cron>
-</cronentries>

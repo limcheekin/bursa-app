@@ -40,6 +40,9 @@ dependencies {
 
     compile 'com.rometools:rome:1.5.0'
 
+    // https://github.com/gaelyk/gaelyk-datastore-viewer-plugin
+    compile 'org.gaelyk:gaelyk-datastore-viewer:2.0'
+
     testCompile 'org.gaelyk:gaelyk-spock:0.4'
     testCompile "com.google.appengine:appengine-api-stubs:$gaeVersion",
             "com.google.appengine:appengine-testing:$gaeVersion"
@@ -65,3 +68,9 @@ dependencies {
     // compile 'org.gaelyk:gaelyk-console:2.0'
 
 }
+
+/*appengine {
+    appcfg {
+        httpProxy = true
+    }
+}*/

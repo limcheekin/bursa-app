@@ -2,3 +2,5 @@
 /build
 /.settings
 /data-backup
+/.idea
+/local.properties

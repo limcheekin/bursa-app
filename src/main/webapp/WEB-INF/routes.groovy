@@ -5,6 +5,6 @@ get "/htmlParsing", forward: "/htmlParsing.groovy"
 get "/feed", forward: "/feed.groovy"
 get "/createStock", forward: "/createStock.groovy"
 get "/getAnnouncements", forward: "/getAnnouncements.groovy"
-get "/getStockInfos", forward: "/getStockInfos.groovy"
+get "/getKlseStockValuations", forward: "/getKlseStockValuations.groovy"
 
 get "/favicon.ico", redirect: "/images/gaelyk-small-favicon.png"

@@ -43,6 +43,9 @@ dependencies {
     // https://github.com/gaelyk/gaelyk-datastore-viewer-plugin
     compile 'org.gaelyk:gaelyk-datastore-viewer:2.0'
 
+    //compile 'com.fasterxml.jackson.core:jackson-core:2.6.0-rc1'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.6.0-rc1'
+    compile 'net.sf.opencsv:opencsv:2.3'
     testCompile 'org.gaelyk:gaelyk-spock:0.4'
     testCompile "com.google.appengine:appengine-api-stubs:$gaeVersion",
             "com.google.appengine:appengine-testing:$gaeVersion"

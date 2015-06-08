@@ -20,33 +20,15 @@ if (supportedFormats.contains(format)) {
 
 def getFeed(feedType) {
     try {
-        Entity stockEntity = datastore.get('Stock', params.stockName)
-        Stock stock = stockEntity as Stock
-
-        Announcement announcement
-
-        def query = new Query("Announcement")
-
-        query.addSort("date", Query.SortDirection.DESCENDING)
-
-        query.addFilter("stockName", Query.FilterOperator.EQUAL, params.stockName)
-
-        PreparedQuery preparedQuery = datastore.prepare(query)
-
-        def entities = preparedQuery.asList( withLimit(Constants.ANNOUNCEMENTS_LIMIT) )
-
         def entries = []
-        entities.each { entity ->
-            announcement = entity as Announcement
-            def desc = new SyndContentImpl(type: "text/plain", value: announcement.description)
-            def entry = new SyndEntryImpl(title: announcement.title,
-                    link: Constants.BURSA_ANNOUNCEMENTS_URL + announcement.link,
-                    publishedDate: announcement.date, description: desc)
-            entries.add(entry)
+        def desc = new SyndContentImpl(type: "text/plain", value: "")
+        def entry = new SyndEntryImpl(title: 'Stock Announcements Feed Service is no longer supported.',
+                    link: '#',
+                    publishedDate: new Date(), description: desc)
+        entries.add(entry)
 
-        }
-        SyndFeed feed = new SyndFeedImpl(feedType: feedType, title: stock.name,
-                link: Constants.URL_PREFIX + stock.name.replaceAll(' ', '+'), description: 'Announcements published in the last few days',
+        SyndFeed feed = new SyndFeedImpl(feedType: feedType, title: "Service Unavailable",
+                link: '#', description: '',
                 entries: entries)
 
         StringWriter writer = new StringWriter()

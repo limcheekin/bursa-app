@@ -1,11 +1,8 @@
-import yahoofinance.YahooFinanceService
+    Date maxDate = datastore.execute {
+        select created: Date from stockValuation
+        sort desc by created
+        limit 1
+    }
+    maxDate.clearTime() // remove time portion
 
-log.info "Setting attribute datetime"
-
-request.setAttribute 'datetime', new Date().toString()
-
-log.info "Forwarding to the template"
-
-YahooFinanceService yahooFinanceService = new YahooFinanceService()
-println yahooFinanceService.testYahooQuote()
-
+	println maxDate.format(Constants.DEFAULT_DATE_TIME_FORMAT, Constants.DEFAULT_TIME_ZONE)

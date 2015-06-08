@@ -1,6 +1,7 @@
 enum KlseScreenerColumn {
     NAME(7),
     CODE(9),
+    CATEGORY(11),
     PRICE(13),
     VOLUME(15),
     EPS(17),

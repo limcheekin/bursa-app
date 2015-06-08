@@ -1,14 +1,18 @@
-import groovyx.gaelyk.datastore.*
+import groovyx.gaelyk.datastore.Entity
+import groovyx.gaelyk.datastore.Indexed
+import groovy.transform.ToString
 
-@Entity
-class MarketValuation {
-  @Indexed String indexName
+@ToString(includeNames=true)
+@Entity(unindexed=false)
+class MarketValuation implements Serializable {
+  String indexName
   Double point
-  BigDecimal totalPrice
-  BigDecimal totalEarningPerShare
-  BigDecimal totalDividendPerShare
+  Long volume
+  Double totalPrice
+  Double totalEarningPerShare
+  Double totalDividendPerShare
   Double priceEarningRatio
   Double earningYield
   Double dividendYield
-  @Indexed Date created
+  Date created
 }

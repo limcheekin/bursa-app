@@ -5,17 +5,18 @@ import groovy.transform.ToString
 @Entity(unindexed=false)
 class StockValuation {
   String shortName
+  String name
   String code
-  BigDecimal price
+  String category
+  Double price
   Long volume
-  BigDecimal earningPerShare
-  BigDecimal dividendPerShare
+  Double earningPerShare
+  Double dividendPerShare
   Double netTangibleAsset
   Double priceEarningRatio
   Double dividendYield
   Double returnOnEquity
   Double priceToBookValue
   Double marketCapital
-  String indexName
   Date created
 }

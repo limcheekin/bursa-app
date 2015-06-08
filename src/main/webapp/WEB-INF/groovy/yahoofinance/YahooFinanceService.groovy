@@ -3,6 +3,7 @@ package yahoofinance
 import com.fasterxml.jackson.databind.ObjectMapper
 
 import au.com.bytecode.opencsv.CSVReader
+import java.util.logging.Logger;
 
 /**
  * IMPORTANT: PLEASE READ
@@ -34,7 +35,7 @@ import au.com.bytecode.opencsv.CSVReader
  */
 class YahooFinanceService {
 
-
+	private static final Logger log = Logger.getLogger(YahooFinanceService.class.getName()); 
 	/**
 	 * List of stock statistical data available
 	 */
@@ -58,13 +59,13 @@ class YahooFinanceService {
 	 * @return response
 	 */
     def testYahooQuote() {
-		def stockSymbols = "AAPL+YHOO"
+		def stockSymbols = "%5EKLSE"
 		def rval = "ERROR"
 		//def urlString = "http://query.yahooapis.com/v1/public/yql?q=select * from yahoo.finance.quotes where symbol in (\"AAPL\")&env=store://datatables.org/alltableswithkeys&format=json"
 		def queryString = "select * from yahoo.finance.quotes where symbol in (\"AAPL\")&env=store://datatables.org/alltableswithkeys&format=json"
 		def urlStr = "http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.quotes%20where%20symbol%20in%20%28%22${stockSymbols}%22%29&env=store://datatables.org/alltableswithkeys&format=json"
 		def uri = URLEncoder.encode(urlStr, "UTF-8")
-		log.debug "ENCODED: ${uri}"
+		log.finest "ENCODED: ${uri}"
 		def url = new URL(urlStr)
 		def connection = url.openConnection()
 		connection.setRequestProperty("Method","GET")
@@ -72,7 +73,7 @@ class YahooFinanceService {
 		connection.doOutput = true
 		connection.connect()
 		def resu = connection.content.text
-		log.debug "GOT REQUEST: ${resu}"
+		log.finest "GOT REQUEST: ${resu}"
 		return resu
 	}
 

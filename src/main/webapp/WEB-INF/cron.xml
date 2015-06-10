@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <cronentries>
     <cron>
-        <url>/getAnnouncements</url>
-        <description>Extract announcement data from bursa and store it to data store</description>
-        <schedule>every day 20:00</schedule>
+        <url>/cron/extractKlseStocks</url>
+        <description>Extract klse valuation data and store it to data store</description>
+        <schedule>every thursday 19:55</schedule>
         <timezone>Asia/Kuala_Lumpur</timezone>
     </cron>
+
+    <cron>
+        <url>/cron/calcKlseMarketValuations</url>
+        <description>Calculate fbm indices valuation and store it to data store</description>
+        <schedule>every thursday 20:00</schedule>
+        <timezone>Asia/Kuala_Lumpur</timezone>
+    </cron>    
 </cronentries>

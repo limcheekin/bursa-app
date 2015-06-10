@@ -14,5 +14,6 @@ class MarketValuation implements Serializable {
   Double priceEarningRatio
   Double earningYield
   Double dividendYield
+  Date ended
   Date created
 }

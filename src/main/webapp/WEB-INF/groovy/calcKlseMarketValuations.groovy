@@ -1,6 +1,11 @@
-import groovy.json.JsonSlurper 
+import groovy.json.JsonSlurper
+import com.google.appengine.api.datastore.*
+import static com.google.appengine.api.datastore.FetchOptions.Builder.*
+import static FbmIndices.*
 
-    String indexDataJson = Constants.STARBIZ_INDICES_JSON_URL.toURL().text
+    // Ref URL: http://mrhaki.blogspot.com/2011/09/groovy-goodness-use-connection.html
+    String indexDataJson = Constants.STARBIZ_INDICES_JSON_URL.toURL().getText(connectTimeout: Constants.CONNECT_TIMEOUT, 
+                                                                              readTimeout: Constants.READ_TIMEOUT)
     int index = indexDataJson.indexOf('{')
     def slurper = new JsonSlurper()
     def indexData = slurper.parseText(indexDataJson.substring(index))
@@ -9,19 +14,18 @@ import groovy.json.JsonSlurper
         indexDataMap[it.symbol] = it
     } 
 
-    Date maxDate = datastore.execute {
-        select created: Date from stockValuation
-        sort desc by created
-        limit 1
-    }
+    Date maxDate = getMaxDate()
     maxDate.clearTime() // remove time portion
 
-    MarketValuation fbmKlciVal = createMarketValue(Constants.FBMKLCI_NAME, Constants.FBMKLCI_COMPONENTS, maxDate, indexDataMap)
-    MarketValuation fbm70Val = createMarketValue(Constants.FBM70_NAME, Constants.FBM70_COMPONENTS, maxDate, indexDataMap)
-    MarketValuation fbmT100 = new MarketValuation(indexName: Constants.FBMT100_NAME, created: maxDate)
+    Date now = new Date()
+
+
+    MarketValuation fbmKlciVal = createMarketValue(FBMKLCI.value, Constants.FBMKLCI_COMPONENTS, maxDate, now, indexDataMap)
+    MarketValuation fbm70Val = createMarketValue(FBM70.value, Constants.FBM70_COMPONENTS, maxDate, now, indexDataMap)
+    MarketValuation fbmT100 = new MarketValuation(indexName: FBMT100.value, ended: maxDate, created: now)
     fbmT100.with {
-        point = toDouble(indexDataMap[Constants.FBMT100_NAME].last)
-        volume = toLong(indexDataMap[Constants.FBMT100_NAME].vol)
+        point = toDouble(indexDataMap[FBMT100.value].last)
+        volume = toLong(indexDataMap[FBMT100.value].vol)
         totalPrice = fbmKlciVal.totalPrice + fbm70Val.totalPrice
         totalEarningPerShare = fbmKlciVal.totalEarningPerShare + fbm70Val.totalEarningPerShare
         totalDividendPerShare = fbmKlciVal.totalDividendPerShare + fbm70Val.totalDividendPerShare
@@ -29,11 +33,11 @@ import groovy.json.JsonSlurper
         earningYield = totalEarningPerShare / totalPrice * 100
         dividendYield = totalDividendPerShare / totalPrice  * 100        
     }
-    MarketValuation fbmSCapVal = createMarketValue(Constants.FBMSCAP_NAME, Constants.FBMSCAP_COMPONENTS, maxDate, indexDataMap)
-    MarketValuation fbmEmas = new MarketValuation(indexName: Constants.FBMEMAS_NAME, created: maxDate)
+    MarketValuation fbmSCapVal = createMarketValue(FBMSCAP.value, Constants.FBMSCAP_COMPONENTS, maxDate, now, indexDataMap)
+    MarketValuation fbmEmas = new MarketValuation(indexName: FBMEMAS.value, ended: maxDate, created: now)
     fbmEmas.with {
-        point = toDouble(indexDataMap[Constants.FBMEMAS_NAME].last)
-        volume = toLong(indexDataMap[Constants.FBMEMAS_NAME].vol)
+        point = toDouble(indexDataMap[FBMEMAS.value].last)
+        volume = toLong(indexDataMap[FBMEMAS.value].vol)
         totalPrice = fbmT100.totalPrice + fbmSCapVal.totalPrice
         totalEarningPerShare = fbmT100.totalEarningPerShare + fbmSCapVal.totalEarningPerShare
         totalDividendPerShare = fbmT100.totalDividendPerShare + fbmSCapVal.totalDividendPerShare
@@ -50,19 +54,16 @@ import groovy.json.JsonSlurper
         fbmEmas.save() 
     }    
 
-    memcache[Constants.FBM_INDICES] = [
-        "${Constants.FBMKLCI_NAME}": fbmKlciVal,
-        "${Constants.FBM70_NAME}": fbm70Val,
-        "${Constants.FBMT100_NAME}": fbmT100,
-        "${Constants.FBMSCAP_NAME}": fbmSCapVal,
-        "${Constants.FBMEMAS_NAME}": fbmEmas
-    ]
+    memcache[FBMKLCI.value] = fbmKlciVal
+    memcache[FBM70.value] = fbm70Val
+    memcache[FBMT100.value] = fbmT100
+    memcache[FBMSCAP.value] = fbmSCapVal
+    memcache[FBMEMAS.value] = fbmEmas
 
-    println memcache[Constants.FBM_INDICES]
+    new KlseMarketValuationService().sendEmail()
 
 
-
-def createMarketValue(String indexName, String indexComponentNames, Date maxDate, Map indexDataMap) {
+def createMarketValue(String indexName, String indexComponentNames, Date maxDate, Date now, Map indexDataMap) {
     List indexComponentNameList = indexComponentNames.split(',') as List
     def indexComponents = StockValuation.findAll {
         where created >= maxDate 
@@ -70,7 +71,7 @@ def createMarketValue(String indexName, String indexComponentNames, Date maxDate
         and shortName in indexComponentNameList
     }
 
-    MarketValuation marketVal = new MarketValuation(indexName: indexName, created: maxDate)
+    MarketValuation marketVal = new MarketValuation(indexName: indexName, ended: maxDate, created: now)
     marketVal.with {
         point = toDouble(indexDataMap[indexName].last)
         volume = toLong(indexDataMap[indexName].vol)
@@ -84,6 +85,15 @@ def createMarketValue(String indexName, String indexComponentNames, Date maxDate
     return marketVal
 }
 
+Date getMaxDate() {
+    query = new Query("StockValuation")
+    query.addSort("created", Query.SortDirection.DESCENDING)
+    PreparedQuery preparedQuery = datastore.prepare(query)
+    def entities = preparedQuery.asList( withLimit(1) )
+    def stockValuation = entities[0] as StockValuation
+    return stockValuation.created
+}
+
 def toDouble(String value) {
     value ? value.replaceAll(',', '').toDouble(): 0.0
 }
@@ -91,23 +101,6 @@ def toDouble(String value) {
 def toLong(String value) {
     value ? value.replaceAll(',', '').toLong(): 0
 }
-
-/*def printMarketValue(marketVal) {
-    println "******************* FBM Valuation *********************"
-    println "\nIndex\t|\tLast\t|\tVolume\t|\tPE\t|\tEY\t|\tDY"
-    marketVal.with {
-    println "\n$indexName\t|\t$point\t|\t$volume\t|\t$priceEarningRatio\t|\t$earningYield\t|\t$dividendYield"
-    }
-
-    println "Point: ${marketVal.totalPrice}</p>"
-    println "Total EPS: ${marketVal.totalEarningPerShare}</p>"
-    println "Total DPS: ${marketVal.totalDividendPerShare}</p>"
-    println "PE: ${marketVal.priceEarningRatio}</p>"
-    println "EY: ${marketVal.earningYield}</p>"
-    println "DY: ${marketVal.dividendYield}</p>"
-}*/
-
-// https://gist.github.com/kdabir/1890733
 
 
 

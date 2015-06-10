@@ -1,6 +1,6 @@
 KlseMarketValuationService marketValService = new KlseMarketValuationService()
-def marketValuations = marketValService.getFbmIndices().values()
-println marketValuations
-for (marketVal in marketValuations) {
-    println "<p>$marketVal</p>"
+println "<pre>${marketValService.emailBody}</pre>"
+
+if (params.sendEmail) {
+	marketValService.sendEmail()
 }

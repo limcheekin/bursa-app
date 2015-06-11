@@ -64,13 +64,13 @@ class KlseMarketValuationService {
 		body << "\n$line"
 
 		// Ref URL: http://mrhaki.blogspot.com/2009/09/groovy-goodness-padding-strings.html
-		body << "\n${'Index'.center(n)}|${'Last'.center(n)}|${"Volume ('00)".center(n)}|${'PE'.center(n)}|${'EY (%)'.center(n)}|${'DY (%)'.center(n)}"
+		body << "\n${'Index'.center(n)}|${'Last'.center(n)}|${"Volume ('00)".center(n + 2)}|${'PE'.center(n)}|${'EY (%)'.center(n)}|${'DY (%)'.center(n)}"
 		body << "\n$line"
 		FbmIndices.values().each {
 			marketVal = fbmIndices[it.value]
     		marketVal.with {
     			body << "\n${indexName.center(n)}|${nf.format(point).center(n)}|"
-    			body << "${nf.format(volume).center(n)}|${df.format(priceEarningRatio).center(n)}|"
+    			body << "${nf.format(volume).center(n + 2)}|${df.format(priceEarningRatio).center(n)}|"
     			body << "${df.format(earningYield).center(n)}|${df.format(dividendYield).center(n)}"
     		}				
 		}

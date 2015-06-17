@@ -17,3 +17,20 @@ import static com.google.appengine.api.datastore.FetchOptions.Builder.*
     stockValuation.created.clearTime() // remove time portion
 
 	println stockValuation.created.format(Constants.DEFAULT_DATE_TIME_FORMAT, Constants.DEFAULT_TIME_ZONE)
+
+	Date now = new Date()
+	
+	def stockIndexes = datastore.execute {
+    	from 'StockIndex' as StockIndex
+    	where effectiveDate < now
+    	sort desc by effectiveDate 
+    	limit 3
+	} 
+
+	def stockIndexMap = [:]
+	for(stockIndex in stockIndexes){
+		stockIndexMap[stockIndex.name] = stockIndex.components
+    	println "<p>$stockIndex</p>"
+	}
+
+	println "<p>#${stockIndexMap}#</p>"

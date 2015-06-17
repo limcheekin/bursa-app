@@ -14,14 +14,25 @@ import static FbmIndices.*
         indexDataMap[it.symbol] = it
     } 
 
+    Date now = new Date()
+
+    def stockIndexes = datastore.execute {
+        from 'StockIndex' as StockIndex
+        where effectiveDate < now
+        sort desc by effectiveDate 
+        limit 3
+    } 
+
+    def stockIndexMap = [:]
+    for(stockIndex in stockIndexes){
+        stockIndexMap[stockIndex.name] = stockIndex.components
+    }    
+
     Date maxDate = getMaxDate()
     maxDate.clearTime() // remove time portion
 
-    Date now = new Date()
-
-
-    MarketValuation fbmKlciVal = createMarketValue(FBMKLCI.value, Constants.FBMKLCI_COMPONENTS, maxDate, now, indexDataMap)
-    MarketValuation fbm70Val = createMarketValue(FBM70.value, Constants.FBM70_COMPONENTS, maxDate, now, indexDataMap)
+    MarketValuation fbmKlciVal = createMarketValue(FBMKLCI.value, stockIndexMap[FBMKLCI.value], maxDate, now, indexDataMap)
+    MarketValuation fbm70Val = createMarketValue(FBM70.value, stockIndexMap[FBM70.value], maxDate, now, indexDataMap)
     MarketValuation fbmT100 = new MarketValuation(indexName: FBMT100.value, ended: maxDate, created: now)
     fbmT100.with {
         point = toDouble(indexDataMap[FBMT100.value].last)
@@ -33,7 +44,7 @@ import static FbmIndices.*
         earningYield = totalEarningPerShare / totalPrice * 100
         dividendYield = totalDividendPerShare / totalPrice  * 100        
     }
-    MarketValuation fbmSCapVal = createMarketValue(FBMSCAP.value, Constants.FBMSCAP_COMPONENTS, maxDate, now, indexDataMap)
+    MarketValuation fbmSCapVal = createMarketValue(FBMSCAP.value, stockIndexMap[FBMSCAP.value], maxDate, now, indexDataMap)
     MarketValuation fbmEmas = new MarketValuation(indexName: FBMEMAS.value, ended: maxDate, created: now)
     fbmEmas.with {
         point = toDouble(indexDataMap[FBMEMAS.value].last)
